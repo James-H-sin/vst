@@ -154,19 +154,22 @@ void GainPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     {
         auto* channelData = buffer.getWritePointer (channel);
 
-        // ..do something to the data...
+        for (int sample = 0; sample < buffer.getNumSamples(); sample++)
+                {
+                    channelData[sample] *= 0.1;
+                }
     }
 }
 
 //==============================================================================
 bool GainPlugin2AudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* GainPlugin2AudioProcessor::createEditor()
 {
-    return new GainPlugin2AudioProcessorEditor (*this);
+    return nullptr; //new GainPlugin2AudioProcessorEditor (*this);
 }
 
 //==============================================================================
