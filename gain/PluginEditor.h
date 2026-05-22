@@ -28,6 +28,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     GainPlugin2AudioProcessor& audioProcessor;
+    juce::Slider mGainControlSlider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GainPlugin2AudioProcessorEditor)
 };
