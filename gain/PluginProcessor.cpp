@@ -22,6 +22,20 @@ GainPlugin2AudioProcessor::GainPlugin2AudioProcessor()
                        )
 #endif
 {
+    addParameter(mGainParameter = new juce::AudioParameterFloat(
+    {"gain", 1},
+    "Gain",
+    0,
+    1.0,
+    0.5
+    ));
+
+    // {"gain", 1}: param id and version number
+    // "Gain": param name
+    // 0: min value
+    // 1.0: max value
+    // 0.5: default value
+
 }
 
 GainPlugin2AudioProcessor::~GainPlugin2AudioProcessor()
@@ -95,6 +109,7 @@ void GainPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    mGainSmoothed = 0.5f;
 }
 
 void GainPlugin2AudioProcessor::releaseResources()
@@ -150,15 +165,16 @@ void GainPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    
+    float* channelLeft = buffer.getWritePointer(0);
+    float* channelRight = buffer.getWritePointer(1);
 
-        for (int sample = 0; sample < buffer.getNumSamples(); sample++)
-                {
-                    channelData[sample] *= 0.1;
-                }
-    }
+    for (int sample = 0; sample < buffer.getNumSamples(); sample++)
+            {
+                mGainSmoothed = mGainSmoothed - 0.004 * (mGainSmoothed - mGainParameter->get());
+                channelLeft[sample] *= mGainSmoothed;
+                channelRight[sample] *= mGainSmoothed;
+            }
 }
 
 //==============================================================================
