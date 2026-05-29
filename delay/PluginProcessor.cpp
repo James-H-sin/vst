@@ -22,10 +22,21 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
                        )
 #endif
 {
+    mCircularBufferLeft = nullptr;
+    mCircularBufferRight = nullptr;
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
 {
+    if (mCircularBufferLeft != nullptr) {
+        delete [] mCircularBufferLeft;
+        mCircularBufferLeft = nullptr;
+    }
+    
+    if (mCircularBufferRight != nullptr) {
+        delete [] mCircularBufferRight;
+        mCircularBufferRight = nullptr;
+    }
 }
 
 //==============================================================================
@@ -95,6 +106,13 @@ void DelayPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    if (mCircularBufferLeft == nullptr) {
+            mCircularBufferLeft = new float [(int)(sampleRate * MAX_DELAY_TIME)](); // trailing parens initialize as zeros
+        }
+        
+        if (mCircularBufferRight == nullptr) {
+            mCircularBufferRight = new float [(int)(sampleRate * MAX_DELAY_TIME)](); // trailing parens initialize as zeros
+        }
 }
 
 void DelayPlugin2AudioProcessor::releaseResources()
