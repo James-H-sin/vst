@@ -27,6 +27,8 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
     mCircularBufferRight = nullptr;
     mCircularBufferWriteHead = 0;
     mCircularBufferLength = 0;
+    mDelayTimeInSamples = 0;
+    mCircularBufferReadHead = 0;
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
@@ -112,6 +114,8 @@ void DelayPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     
     mCircularBufferWriteHead = 0;
     mCircularBufferLength = sampleRate * MAX_DELAY_TIME;
+    mDelayTimeInSamples = sampleRate * 0.5;
+
     
     if (mCircularBufferLeft == nullptr) {
             mCircularBufferLeft = new float [(int)(sampleRate * MAX_DELAY_TIME)](); // trailing parens initialize as zeros
@@ -184,8 +188,14 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             float* leftChannel = buffer.getWritePointer(0);
             float* rightChannel = buffer.getWritePointer(1);
                     
+            mCircularBufferReadHead = mCircularBufferWriteHead - mDelayTimeInSamples;
+            if (mCircularBufferReadHead < 0) {
+                        mCircularBufferReadHead += mCircularBufferLength;
+                    }
+            
             mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i];
             mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i];
+            
             
             mCircularBufferWriteHead++;
                     

@@ -62,4 +62,6 @@ private:
     float* mCircularBufferRight;
     int mCircularBufferWriteHead;
     int mCircularBufferLength;
+    float mDelayTimeInSamples; // the m prefix tells us this variable lives on the class instance, not in a method
+    float mCircularBufferReadHead;
 };
