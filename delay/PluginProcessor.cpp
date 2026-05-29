@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
 //==============================================================================
 DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -24,6 +25,8 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
 {
     mCircularBufferLeft = nullptr;
     mCircularBufferRight = nullptr;
+    mCircularBufferWriteHead = 0;
+    mCircularBufferLength = 0;
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
@@ -106,6 +109,10 @@ void DelayPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    
+    mCircularBufferWriteHead = 0;
+    mCircularBufferLength = sampleRate * MAX_DELAY_TIME;
+    
     if (mCircularBufferLeft == nullptr) {
             mCircularBufferLeft = new float [(int)(sampleRate * MAX_DELAY_TIME)](); // trailing parens initialize as zeros
         }
@@ -173,6 +180,23 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
+        for (int i = 0; i < buffer.getNumSamples(); i++) {
+            float* leftChannel = buffer.getWritePointer(0);
+            float* rightChannel = buffer.getWritePointer(1);
+                    
+            mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i];
+            mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i];
+            
+            mCircularBufferWriteHead++;
+                    
+                    if (mCircularBufferWriteHead >= mCircularBufferLength) {
+                        mCircularBufferWriteHead = 0;
+                    }
+
+                }
+
+            }
+
     }
 }
 
