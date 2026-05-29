@@ -179,36 +179,33 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
-        for (int i = 0; i < buffer.getNumSamples(); i++) {
-            float* leftChannel = buffer.getWritePointer(0);
-            float* rightChannel = buffer.getWritePointer(1);
-                    
-            mCircularBufferReadHead = mCircularBufferWriteHead - mDelayTimeInSamples;
-            if (mCircularBufferReadHead < 0) {
-                        mCircularBufferReadHead += mCircularBufferLength;
-                    }
-            
-            mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i];
-            mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i];
-            
-            
-            mCircularBufferWriteHead++;
-                    
-                    if (mCircularBufferWriteHead >= mCircularBufferLength) {
-                        mCircularBufferWriteHead = 0;
-                    }
-
+    for (int i = 0; i < buffer.getNumSamples(); i++) {
+        float* leftChannel = buffer.getWritePointer(0);
+        float* rightChannel = buffer.getWritePointer(1);
+                
+        mCircularBufferReadHead = mCircularBufferWriteHead - mDelayTimeInSamples;
+        if (mCircularBufferReadHead < 0) {
+                    mCircularBufferReadHead += mCircularBufferLength;
+                }
+        buffer.addSample(0, i, mCircularBufferLeft[(int)mCircularBufferReadHead]);
+        buffer.addSample(1, i, mCircularBufferRight[(int)mCircularBufferReadHead]);
+        
+        mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i];
+        mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i];
+        
+        
+        mCircularBufferWriteHead++;
+                
+                if (mCircularBufferWriteHead >= mCircularBufferLength) {
+                    mCircularBufferWriteHead = 0;
                 }
 
             }
 
-    }
-}
+        }
+
 
 //==============================================================================
 bool DelayPlugin2AudioProcessor::hasEditor() const
