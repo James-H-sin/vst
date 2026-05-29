@@ -175,6 +175,7 @@ void GainPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
                 channelLeft[sample] *= mGainSmoothed;
                 channelRight[sample] *= mGainSmoothed;
             }
+    DBG(*mGainParameter);
 }
 
 //==============================================================================
