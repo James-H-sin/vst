@@ -29,6 +29,8 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
     mCircularBufferLength = 0;
     mDelayTimeInSamples = 0;
     mCircularBufferReadHead = 0;
+    mFeedbackLeft = 0;
+    mFeedbackRight = 0;
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
@@ -173,6 +175,8 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+    float* leftChannel = buffer.getWritePointer(0);
+    float* rightChannel = buffer.getWritePointer(1);
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
     // Make sure to reset the state if your inner loop is processing
@@ -182,25 +186,30 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         // ..do something to the data...
     for (int i = 0; i < buffer.getNumSamples(); i++) {
-        float* leftChannel = buffer.getWritePointer(0);
-        float* rightChannel = buffer.getWritePointer(1);
-                
+        
+        mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i] + mFeedbackLeft;
+        mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i] + mFeedbackRight;
+       
+        mCircularBufferWriteHead++;
+        
+        if (mCircularBufferWriteHead >= mCircularBufferLength) {
+            mCircularBufferWriteHead = 0;
+        }
+       
         mCircularBufferReadHead = mCircularBufferWriteHead - mDelayTimeInSamples;
+        
         if (mCircularBufferReadHead < 0) {
                     mCircularBufferReadHead += mCircularBufferLength;
                 }
+       
+        float delay_sample_left = mCircularBufferLeft[(int)mCircularBufferReadHead];
+        float delay_sample_right = mCircularBufferRight[(int)mCircularBufferReadHead];
+        
+        mFeedbackLeft = delay_sample_left * 0.8;
+        mFeedbackRight = delay_sample_right * 0.8;
+        
         buffer.addSample(0, i, mCircularBufferLeft[(int)mCircularBufferReadHead]);
         buffer.addSample(1, i, mCircularBufferRight[(int)mCircularBufferReadHead]);
-        
-        mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i];
-        mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i];
-        
-        
-        mCircularBufferWriteHead++;
-                
-                if (mCircularBufferWriteHead >= mCircularBufferLength) {
-                    mCircularBufferWriteHead = 0;
-                }
 
             }
 
