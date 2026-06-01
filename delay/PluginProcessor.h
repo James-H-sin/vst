@@ -66,4 +66,5 @@ private:
     float mCircularBufferReadHead;
     float mFeedbackLeft;
     float mFeedbackRight;
+    float mDryWet;
 };
