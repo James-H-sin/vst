@@ -66,5 +66,8 @@ private:
     float mCircularBufferReadHead;
     float mFeedbackLeft;
     float mFeedbackRight;
-    float mDryWet;
+    
+    juce::AudioParameterFloat* mDryWetParameter;
+    juce::AudioParameterFloat* mFeedbackParameter;
+    juce::AudioParameterFloat* mDelayTimeParameter;
 };

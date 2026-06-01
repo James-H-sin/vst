@@ -31,7 +31,10 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
     mCircularBufferReadHead = 0;
     mFeedbackLeft = 0;
     mFeedbackRight = 0;
-    mDryWet = 0.5;
+    
+    addParameter(mDryWetParameter = new juce::AudioParameterFloat({"drywet", 1}, "Dry Wet", 0, 1.0, 0.5));
+    addParameter(mFeedbackParameter = new juce::AudioParameterFloat({"feedback", 1}, "Feedback", 0, 0.98, 0.5));
+    addParameter(mDelayTimeParameter = new juce::AudioParameterFloat({"delaytime", 1}, "Delay Time", 0.01, MAX_DELAY_TIME, 0.5));
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
@@ -117,7 +120,6 @@ void DelayPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     
     mCircularBufferWriteHead = 0;
     mCircularBufferLength = sampleRate * MAX_DELAY_TIME;
-    mDelayTimeInSamples = sampleRate * 0.5;
 
     
     if (mCircularBufferLeft == nullptr) {
@@ -188,6 +190,8 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         // ..do something to the data...
     for (int i = 0; i < buffer.getNumSamples(); i++) {
         
+        mDelayTimeInSamples = getSampleRate() * *mDelayTimeParameter;
+        
         mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i] + mFeedbackLeft;
         mCircularBufferRight[mCircularBufferWriteHead] = rightChannel[i] + mFeedbackRight;
        
@@ -206,11 +210,11 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         float delay_sample_left = mCircularBufferLeft[(int)mCircularBufferReadHead];
         float delay_sample_right = mCircularBufferRight[(int)mCircularBufferReadHead];
         
-        mFeedbackLeft = delay_sample_left * 0.8;
-        mFeedbackRight = delay_sample_right * 0.8;
+        mFeedbackLeft = delay_sample_left * *mFeedbackParameter;
+        mFeedbackRight = delay_sample_right * *mFeedbackParameter;
         
-        buffer.setSample(0, i, buffer.getSample(0, i) * (1 - mDryWet) + delay_sample_left * mDryWet);
-        buffer.setSample(1, i, buffer.getSample(1, i) * (1 - mDryWet) + delay_sample_right * mDryWet);
+        buffer.setSample(0, i, buffer.getSample(0, i) * *mDryWetParameter + delay_sample_left * (1 - *mDryWetParameter));
+        buffer.setSample(1, i, buffer.getSample(1, i) * *mDryWetParameter + delay_sample_right * (1 - *mDryWetParameter));
 
             }
 
