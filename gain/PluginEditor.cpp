@@ -15,7 +15,8 @@ GainPlugin2AudioProcessorEditor::GainPlugin2AudioProcessorEditor (GainPlugin2Aud
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-
+    auto& params = processor.getParameters();
+    juce::AudioParameterFloat* gainParameter = (juce::AudioParameterFloat*)params.getUnchecked(0);
     
     setSize (400, 300);
     mGainControlSlider.setBounds(0, 0, 100, 100);
@@ -25,9 +26,6 @@ GainPlugin2AudioProcessorEditor::GainPlugin2AudioProcessorEditor (GainPlugin2Aud
     mGainControlSlider.setValue(*gainParameter);
 
     addAndMakeVisible(mGainControlSlider);
-    
-    auto& params = processor.getParameters();
-    juce::AudioParameterFloat* gainParameter = (juce::AudioParameterFloat*)params.getUnchecked(0);
     
     mGainControlSlider.onValueChange = [this, gainParameter] {
     *gainParameter = mGainControlSlider.getValue();
@@ -65,4 +63,5 @@ void GainPlugin2AudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+    mGainControlSlider.setBounds(0, 0, 100, 100);
 }
