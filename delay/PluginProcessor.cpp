@@ -206,9 +206,19 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         if (mCircularBufferReadHead < 0) {
                     mCircularBufferReadHead += mCircularBufferLength;
                 }
+        
+        // assuming an intersample value for mDelayReadHead, separate int from mantessa:
+        int readHead_x = (int)mCircularBufferReadHead;
+        int readHead_x1 = readHead_x + 1;
+        float readHeadFloat = mCircularBufferReadHead - readHead_x; // just what's after the decimal
+        
+        if (readHead_x1 >= mCircularBufferLength) {
+        readHead_x1 -= mCircularBufferLength;
+        }
+
        
-        float delay_sample_left = mCircularBufferLeft[(int)mCircularBufferReadHead];
-        float delay_sample_right = mCircularBufferRight[(int)mCircularBufferReadHead];
+        float delay_sample_left = lin_interp(mCircularBufferLeft[readHead_x], mCircularBufferLeft[readHead_x1], readHeadFloat);
+        float delay_sample_right = lin_interp(mCircularBufferRight[readHead_x], mCircularBufferRight[readHead_x1], readHeadFloat);
         
         mFeedbackLeft = delay_sample_left * *mFeedbackParameter;
         mFeedbackRight = delay_sample_right * *mFeedbackParameter;
@@ -245,6 +255,12 @@ void DelayPlugin2AudioProcessor::setStateInformation (const void* data, int size
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
+
+float DelayAudioProcessor::lin_interp(float sample_x, float sample_x1, float inPhase)
+{
+    return (1 - inPhase) * sample_x + inPhase * sample_x1; // maybe looks familiar from dry/wet math...
+}
+
 
 //==============================================================================
 // This creates new instances of the plugin..
