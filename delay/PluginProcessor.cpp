@@ -35,6 +35,8 @@ DelayPlugin2AudioProcessor::DelayPlugin2AudioProcessor()
     addParameter(mDryWetParameter = new juce::AudioParameterFloat({"drywet", 1}, "Dry Wet", 0, 1.0, 0.5));
     addParameter(mFeedbackParameter = new juce::AudioParameterFloat({"feedback", 1}, "Feedback", 0, 0.98, 0.5));
     addParameter(mDelayTimeParameter = new juce::AudioParameterFloat({"delaytime", 1}, "Delay Time", 0.01, MAX_DELAY_TIME, 0.5));
+    
+    mDelayTimeSmoothed = 0;
 }
 
 DelayPlugin2AudioProcessor::~DelayPlugin2AudioProcessor()
@@ -121,6 +123,7 @@ void DelayPlugin2AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     mCircularBufferWriteHead = 0;
     mCircularBufferLength = sampleRate * MAX_DELAY_TIME;
 
+    mDelayTimeSmoothed = *mDelayTimeParameter;
     
     if (mCircularBufferLeft == nullptr) {
             mCircularBufferLeft = new float [(int)(sampleRate * MAX_DELAY_TIME)](); // trailing parens initialize as zeros
@@ -190,6 +193,8 @@ void DelayPlugin2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         // ..do something to the data...
     for (int i = 0; i < buffer.getNumSamples(); i++) {
         
+        mDelayTimeSmoothed = mDelayTimeSmoothed - 0.001 * (mDelayTimeSmoothed - *mDelayTimeParameter);
+        
         mDelayTimeInSamples = getSampleRate() * *mDelayTimeParameter;
         
         mCircularBufferLeft[mCircularBufferWriteHead] = leftChannel[i] + mFeedbackLeft;
@@ -256,7 +261,7 @@ void DelayPlugin2AudioProcessor::setStateInformation (const void* data, int size
     // whose contents will have been created by the getStateInformation() call.
 }
 
-float DelayAudioProcessor::lin_interp(float sample_x, float sample_x1, float inPhase)
+float DelayPlugin2AudioProcessor::lin_interp(float sample_x, float sample_x1, float inPhase)
 {
     return (1 - inPhase) * sample_x + inPhase * sample_x1; // maybe looks familiar from dry/wet math...
 }
